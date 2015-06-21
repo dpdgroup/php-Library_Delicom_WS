@@ -14,6 +14,11 @@ require_once("dpdLibraryInterface.php");
 class delicomWebServicesLibrary implements dpdLibraryInterface {
   
   /**
+   * Unique identifier for the class.
+   */
+  const UID = "DWS"
+  
+  /**
    * @param stdObject $config The actual configuration.
    * @param dpdCache $cache A simple cache object to save and retreive data.
    * @return delicomWebServicesLibrary
@@ -104,7 +109,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * TIP: If possible map the address to geolocation for an optimal location lookup.
    * @param dpdLocation $location location to look up.
    * @param integer $limit the maximum amount of shops to return
-   * @return dpdShop[] 
+   * @return (dpdShop[]|false)
    */
   public function getShops(dpdLocation $location, $limit) {
     if(empty($location->lng) || empty($location->lat)) {
@@ -125,6 +130,10 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
       ,"inactive"  => "https://..."
       ,"shaddow" => "https://..."
     ));
+    
+    if(count($shopFinder->results) == 0) {
+      return false;
+    }
     
     foreach($shopFinder->results as $shop){
       $newShop = new dpdShop(array(
@@ -184,7 +193,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * Get label(s) for a single order.
    * 
    * @param dpdOrder $order order details te be used.
-   * @return dpdLabel
+   * @return (dpdLabel|false)
    */
   public function getLabel(dpdOrder $order, $format = dpdLabel::pdf){
     return false;
@@ -194,7 +203,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * Get labels for multiple orders.
    * 
    * @param dpdOrder[] $order an array of dpdOrder objects.
-   * @return dpdLabel[]
+   * @return (dpdLabel[]|false)
    */
   public function getLabels(array $orders, $format = dpdLabel::pdf) {
     return false;
@@ -204,7 +213,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * Get T&T for a Label/Label Number
    * 
    * @param dpdLabel $label
-   * @return dpdTracking
+   * @return (dpdTracking|false)
    */
   public function getInfo(dpdLabel $label) {
     return false;
@@ -227,7 +236,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
         return $login;
       }
     }
-    // If it wasn't cached, or settings are changed, we create a new loging
+    // If it wasn't cached, or settings are changed, we create a new login
     $login = new DpdLogin($delisID, $password, $server_url; $time_logging);
     
     // Cache it.
