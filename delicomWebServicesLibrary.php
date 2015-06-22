@@ -16,7 +16,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
   /**
    * Unique identifier for the class.
    */
-  const UID = "DWS"
+  const UID = "DWS";
   
   /**
    * @param stdObject $config The actual configuration.
@@ -88,14 +88,14 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
     $result = array();
     $result[] = new dpdService( array(
       "label" => "Home With Predict"
-      "description" => "Get your parcel delivered at your place, we'll notify you in the morning when we are commming by."
+      ,"description" => "Get your parcel delivered at your place, we'll notify you in the morning when we are commming by."
       ,"name" => "home_predict" 
       ,"type" => dpdService::classic
       ,"validate" => function($order){return true;}
     ));
     $result[] = new dpdService( array(
       "label" => "Pickup"
-      "description" => "Can't be home? Let us delivery your parcel in one of our Pickup points."
+      ,"description" => "Can't be home? Let us delivery your parcel in one of our Pickup points."
       ,"name" => "pickup" 
       ,"type" => dpdService::parcelshop
       ,"validate" => function($order){return true;}
@@ -119,8 +119,8 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
     $shopFinder = new DpdParcelShopFinder($login);
     
     $shopFinder->search(array(
-      "long" => $location->lng;
-      "lat" => $location->lat;
+      "long" => $location->lng
+      ,"lat" => $location->lat
     ));
     
     $result = array();
@@ -140,7 +140,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
         "id" => $shop->parcelShopId
         ,"active" => true
         ,"name" => $shop->company
-        ,"location" = new dpdLocation(array(
+        ,"location" => new dpdLocation(array(
           "route" => $shop->street
           ,"street_number" => $shop->houseNo
           ,"locality" => $shop->city
@@ -239,6 +239,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
     foreach($order->parcels as $parcel) {
       $shipment->request["order"]["parcels"][] = array(
         "weight" => $parcel->weight
+      );
     }
     
     // Additional parcelshop data
@@ -307,7 +308,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
     $lifeCycle = new DpdParcelLifeCycle($login);
     
     $lifeCycle->search(array(
-      "parcellabelnumber" => $label->number;
+      "parcellabelnumber" => $label->number
     ));
     
     if(!empty($lifeCycle->results[$label->number])){
@@ -315,19 +316,19 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
       foreach($lifeCycle->results[$label->number]["trackingresult"]["statusInfo"] as $status) {
         $event = new dpdEvent();
         switch($status->status) {
-          "ACCEPTED":
+          case "ACCEPTED":
             $event->status = dpdEvent::sent;
             break;
-          "AT_SENDING_DEPOT":
+          case "AT_SENDING_DEPOT":
             $event->status = dpdEvent::transit;
             break;
-          "ON_THE_ROAD":
+          case "ON_THE_ROAD":
             $event->status = dpdEvent::transit;
             break;
-          "AT_DELIVERY_DEPOT":
+          case "AT_DELIVERY_DEPOT":
             $event->status = dpdEvent::delivery;
             break;
-          "DELIVERED":
+          case "DELIVERED":
             $event->status = dpdEvent::delivered;
             break;
         }
@@ -356,7 +357,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
       }
     }
     // If it wasn't cached, or settings are changed, we create a new login
-    $login = new DpdLogin($delisID, $password, $server_url; $time_logging);
+    $login = new DpdLogin($delisID, $password, $server_url, $time_logging);
     // TODO add a try catch.
     
     // Cache it.
