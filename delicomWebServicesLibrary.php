@@ -196,83 +196,83 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * @return (dpdLabel|false)
    */
   public function getLabel(dpdOrder $order, $format = dpdLabel::pdf){
-		if($format != dpdLabel::pdf){
-			return false;
-		}
-	
+    if($format != dpdLabel::pdf){
+      return false;
+    }
+  
     $login = $this->getLogin();
     $shipment = new DpdShipment($login);
-		
-		// TODO: add check for parseData(); 
-		
-		// General call
-		$shipment->request = array(
-			"order" => array(
-				"generalShipmentData" => array(
-					"mpsCustomerReferenceNumber1" => $order->reference
-					,"sendingDepot" => $login->depot
-					,"product" => "CL"
-					,"sender" => array(
-						"name1" => $order->sender->first_name . " " . $order->sender->last_name
-						,"street" => $order->sender->location->route
-						,"houseNo" => $order->sender->location->street_number
-						,"country" => $order->sender->location->country_A2
-						,"zipCode" => $order->sender->location->postcal_code
-						,"city" => $order->sender->location->locality
-					)
-					,"recipient" => array(
-						"name1" => $order->receiver->first_name . " " . $order->sender->last_name
-						,"street" => $order->receiver->location->route
-						,"houseNo" => $order->receiver->location->street_number
-						,"country" => $order->receiver->location->country_A2
-						,"zipCode" => $order->receiver->location->postcal_code
-						,"city" => $order->receiver->location->locality
-					)
-				)
-				,"productAndServiceData" => array(
-					"orderType" => "consignment"
-				)
-			)
-		);
-		
-		// Add parcel data
-		foreach($order->parcels as $parcel) {
-			$shipment->request["order"]["parcels"][] = array(
-				"weight" => $parcel->weight
-		}
-		
-		// Additional parcelshop data
-		if($order->service->type == dpdService::parcelshop){
-			$shipment->request['order']['productAndServiceData']['parcelShopDelivery'] = array(
-				'parcelShopId' => $order->shop->id
-				,'parcelShopNotification' => array(
-					'channel' => 1
-					,'value' => $order->receiver->email
-					,'language' => $order->receiver->language
-				)
-			);
-		}
-		
-		// Additional predict data.
-		if($order->service->name == "home_predict") {
-			$shipment->request['order']['productAndServiceData']['predict'] = array(
-				'channel' => 1
-				,'value' => $order->receiver->email
-				,'language' => $order->receiver->language
-			);
-		}
-		
-		$shipment->send(); // TODO: add try catch block.
-		
-		if(isset($shipment->result->orderResult->parcellabelsPDF)) {
-			$label = new dpdLabel();
-			$label->number = $shipment->result->orderResult->shipmentResponses->parcelInformation->parcelLabelNumber;
-			$label->binary = $shipment->result->orderResult->parcellabelsPDF;
-			
-			return $label;
-		}	
-			
-		return false;
+    
+    // TODO: add check for parseData(); 
+    
+    // General call
+    $shipment->request = array(
+      "order" => array(
+        "generalShipmentData" => array(
+          "mpsCustomerReferenceNumber1" => $order->reference
+          ,"sendingDepot" => $login->depot
+          ,"product" => "CL"
+          ,"sender" => array(
+            "name1" => $order->sender->first_name . " " . $order->sender->last_name
+            ,"street" => $order->sender->location->route
+            ,"houseNo" => $order->sender->location->street_number
+            ,"country" => $order->sender->location->country_A2
+            ,"zipCode" => $order->sender->location->postcal_code
+            ,"city" => $order->sender->location->locality
+          )
+          ,"recipient" => array(
+            "name1" => $order->receiver->first_name . " " . $order->sender->last_name
+            ,"street" => $order->receiver->location->route
+            ,"houseNo" => $order->receiver->location->street_number
+            ,"country" => $order->receiver->location->country_A2
+            ,"zipCode" => $order->receiver->location->postcal_code
+            ,"city" => $order->receiver->location->locality
+          )
+        )
+        ,"productAndServiceData" => array(
+          "orderType" => "consignment"
+        )
+      )
+    );
+    
+    // Add parcel data
+    foreach($order->parcels as $parcel) {
+      $shipment->request["order"]["parcels"][] = array(
+        "weight" => $parcel->weight
+    }
+    
+    // Additional parcelshop data
+    if($order->service->type == dpdService::parcelshop){
+      $shipment->request['order']['productAndServiceData']['parcelShopDelivery'] = array(
+        'parcelShopId' => $order->shop->id
+        ,'parcelShopNotification' => array(
+          'channel' => 1
+          ,'value' => $order->receiver->email
+          ,'language' => $order->receiver->language
+        )
+      );
+    }
+    
+    // Additional predict data.
+    if($order->service->name == "home_predict") {
+      $shipment->request['order']['productAndServiceData']['predict'] = array(
+        'channel' => 1
+        ,'value' => $order->receiver->email
+        ,'language' => $order->receiver->language
+      );
+    }
+    
+    $shipment->send(); // TODO: add try catch block.
+    
+    if(isset($shipment->result->orderResult->parcellabelsPDF)) {
+      $label = new dpdLabel();
+      $label->number = $shipment->result->orderResult->shipmentResponses->parcelInformation->parcelLabelNumber;
+      $label->binary = $shipment->result->orderResult->parcellabelsPDF;
+      
+      return $label;
+    }  
+      
+    return false;
   }
   
   /**
@@ -282,18 +282,18 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * @return (dpdLabel[]|false)
    */
   public function getLabels(array $orders, $format = dpdLabel::pdf) {
-		if($format != dpdLabel::pdf){
-			return false;
-		}
-		
-		$result = array();
-		foreach($orders as $order) {
-			$label = $this->getLabel($order, $format);
-			if($label) {
-				$result[] = $label;
-			}
-		}
-		return $result;
+    if($format != dpdLabel::pdf){
+      return false;
+    }
+    
+    $result = array();
+    foreach($orders as $order) {
+      $label = $this->getLabel($order, $format);
+      if($label) {
+        $result[] = $label;
+      }
+    }
+    return $result;
   }
   
   /**
@@ -303,39 +303,39 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * @return (dpdTracking|false)
    */
   public function getInfo(dpdLabel $label) {
-		$login = $this->getLogin();
+    $login = $this->getLogin();
     $lifeCycle = new DpdParcelLifeCycle($login);
-		
-		$lifeCycle->search(array(
-			"parcellabelnumber" => $label->number;
-		));
-		
-		if(!empty($lifeCycle->results[$label->number])){
-			$result = array();
-			foreach($lifeCycle->results[$label->number]["trackingresult"]["statusInfo"] as $status) {
-				$event = new dpdEvent();
-				switch($status->status) {
-					"ACCEPTED":
-						$event->status = dpdEvent::sent;
-						break;
-					"AT_SENDING_DEPOT":
-						$event->status = dpdEvent::transit;
-						break;
-					"ON_THE_ROAD":
-						$event->status = dpdEvent::transit;
-						break;
-					"AT_DELIVERY_DEPOT":
-						$event->status = dpdEvent::delivery;
-						break;
-					"DELIVERED":
-						$event->status = dpdEvent::delivered;
-						break;
-				}
-				$event->description = $status->description->content->content;
-			}
-		}
-		
-		return $result;
+    
+    $lifeCycle->search(array(
+      "parcellabelnumber" => $label->number;
+    ));
+    
+    if(!empty($lifeCycle->results[$label->number])){
+      $result = array();
+      foreach($lifeCycle->results[$label->number]["trackingresult"]["statusInfo"] as $status) {
+        $event = new dpdEvent();
+        switch($status->status) {
+          "ACCEPTED":
+            $event->status = dpdEvent::sent;
+            break;
+          "AT_SENDING_DEPOT":
+            $event->status = dpdEvent::transit;
+            break;
+          "ON_THE_ROAD":
+            $event->status = dpdEvent::transit;
+            break;
+          "AT_DELIVERY_DEPOT":
+            $event->status = dpdEvent::delivery;
+            break;
+          "DELIVERED":
+            $event->status = dpdEvent::delivered;
+            break;
+        }
+        $event->description = $status->description->content->content;
+      }
+    }
+    
+    return $result;
   }
   
   private function getLogin() {
@@ -357,7 +357,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
     }
     // If it wasn't cached, or settings are changed, we create a new login
     $login = new DpdLogin($delisID, $password, $server_url; $time_logging);
-		// TODO add a try catch.
+    // TODO add a try catch.
     
     // Cache it.
     $this->cache->login = $login;
