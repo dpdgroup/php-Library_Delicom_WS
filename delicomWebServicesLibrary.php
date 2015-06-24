@@ -8,8 +8,12 @@
 * @license    LGPL
 */
 
-require_once("dpdLibraryInterface.php");
-//require the dpd web service classes.
+require_once("interfaces/dpdLibraryInterface.php");
+
+foreach (glob("DWS/*.php") as $filename)
+{
+  require_once($filename);
+}
 
 class delicomWebServicesLibrary implements dpdLibraryInterface {
   
@@ -51,28 +55,40 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
       ,"validate" => function($var){return is_string($var);}
     ));
     $result[] = new dpdConfiguration( array(
-      "label" => "Server:Live"
-      ,"name" => "delis_server" 
-      ,"type" => "option"
-      ,"value" => "1"
+      "label" => "Server"
+      ,"type" => "label"
+      ,"children" => array(
+        new dpdConfiguration( array(
+          "label" => "Live"
+          ,"name" => "delis_server" 
+          ,"type" => "option"
+          ,"value" => "1"
+        ))
+        ,new dpdConfiguration( array(
+          "label" => "Stage"
+          ,"name" => "delis_server" 
+          ,"type" => "option"
+          ,"value" => "0"
+        ))
+      )
     ));
     $result[] = new dpdConfiguration( array(
-      "label" => "Server:Stage"
-      ,"name" => "delis_server" 
-      ,"type" => "option"
-      ,"value" => "0"
-    ));
-    $result[] = new dpdConfiguration( array(
-      "label" => "Time Logging:On"
-      ,"name" => "time_logging" 
-      ,"type" => "option"
-      ,"value" => "1"
-    ));
-    $result[] = new dpdConfiguration( array(
-      "label" => "Time Logging:Off"
-      ,"name" => "time_logging" 
-      ,"type" => "option"
-      ,"value" => "0"
+      "label" => "Time Logging"
+      ,"type" => "label"
+      ,"children" => array(
+        new dpdConfiguration( array(
+          "label" => "On"
+          ,"name" => "time_logging" 
+          ,"type" => "option"
+          ,"value" => "1"
+        ))
+        ,new dpdConfiguration( array(
+          "label" => "Off"
+          ,"name" => "time_logging" 
+          ,"type" => "option"
+          ,"value" => "0"
+        ))
+      )
     ));
     
     return $result;
@@ -87,14 +103,16 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
   static function getServices(){
     $result = array();
     $result[] = new dpdService( array(
-      "label" => "Home With Predict"
+      "parentId" => self::UID
+      ,"label" => "Home With Predict"
       ,"description" => "Get your parcel delivered at your place, we'll notify you in the morning when we are commming by."
       ,"name" => "home_predict" 
       ,"type" => dpdService::classic
       ,"validate" => function($order){return true;}
     ));
     $result[] = new dpdService( array(
-      "label" => "Pickup"
+      "parentId" => self::UID
+      ,"label" => "Pickup"
       ,"description" => "Can't be home? Let us delivery your parcel in one of our Pickup points."
       ,"name" => "pickup" 
       ,"type" => dpdService::parcelshop
@@ -111,7 +129,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
    * @param integer $limit the maximum amount of shops to return
    * @return (dpdShop[]|false)
    */
-  public function getShops(dpdLocation $location, $limit) {
+  public function getShops(dpdLocation $location, $limit = 10) {
     if(empty($location->lng) || empty($location->lat)) {
       $location->parseData();
     }
@@ -155,22 +173,45 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
       ));
       
       foreach($shop->openingHours as $day){
-        $name = strtolower($day->weekday);
+        $name;
+        switch($day->weekday) {
+          case "Monday":
+            $name = dpdShopHours::monday;
+            break;
+          case "Tuesday":
+            $name = dpdShopHours::tuesday;
+            break;
+          case "Wednesday":
+            $name = dpdShopHours::wednesday;
+            break;
+          case "Thurday":
+            $name = dpdShopHours::thursday;
+            break;
+          case "Friday":
+            $name = dpdShopHours::friday;
+            break;
+          case "Saturday":
+            $name = dpdShopHours::saturday;
+            break;
+          case "Sunday":
+            $name = dpdShopHours::sunday;
+            break;
+        }
         if(!empty($day->openMorning)) {
-          $open = str_replace(":", "", $shop->openMorning);
+          $open = str_replace(":", "", $day->openMorning);
           if(!empty($day->closeMorning)) {
-            $close = str_replace(":", "", $shop->closeMorning);
+            $close = str_replace(":", "", $day->closeMorning);
           } elseif(!empty($day->closeAfternoon)) {
-            $close = str_replace(":", "", $shop->closeAfternoon);
+            $close = str_replace(":", "", $day->closeAfternoon);
           }
-          $newShop->business_hours->addBlock(dpdShopHours::$name, $open, $close);
+          $newShop->business_hours->addBlock($name, $open, $close);
         }
         if(!empty($day->openAfternoon)) {
-          $open = str_replace(":", "", $shop->openAfternoon);
+          $open = str_replace(":", "", $day->openAfternoon);
           if(!empty($day->closeAfternoon)) {
-            $close = str_replace(":", "", $shop->closeAfternoon);
+            $close = str_replace(":", "", $day->closeAfternoon);
           }
-          $newShop->business_hours->addBlock(dpdShopHours::$name, $open, $close);
+          $newShop->business_hours->addBlock($name, $open, $close);
         }
       }
       
@@ -217,7 +258,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
             ,"street" => $order->sender->location->route
             ,"houseNo" => $order->sender->location->street_number
             ,"country" => $order->sender->location->country_A2
-            ,"zipCode" => $order->sender->location->postcal_code
+            ,"zipCode" => $order->sender->location->postal_code
             ,"city" => $order->sender->location->locality
           )
           ,"recipient" => array(
@@ -225,7 +266,7 @@ class delicomWebServicesLibrary implements dpdLibraryInterface {
             ,"street" => $order->receiver->location->route
             ,"houseNo" => $order->receiver->location->street_number
             ,"country" => $order->receiver->location->country_A2
-            ,"zipCode" => $order->receiver->location->postcal_code
+            ,"zipCode" => $order->receiver->location->postal_code
             ,"city" => $order->receiver->location->locality
           )
         )
